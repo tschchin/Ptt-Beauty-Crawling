@@ -21,4 +21,5 @@ class PttSpider(scrapy.Spider):
 			path = response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[2]/@href').extract()
 			target_url = 'https://www.ptt.cc'
 			url = target_url + path[0];
+			
 			yield scrapy.Request(url, callback=self.parse)
