@@ -1,0 +1,9 @@
+Date: Thu, 08 Mar 2018 14:06:03 GMT
+Content-Type: text/html; charset=utf-8
+Alternate-Protocol: 443:npn-spdy/3
+Strict-Transport-Security: max-age=0
+X-Content-Type-Options: nosniff
+Expect-Ct: max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+Server: cloudflare
+Cf-Ray: 3f85dc38f8da469e-TPE
+Content-Encoding: gzip

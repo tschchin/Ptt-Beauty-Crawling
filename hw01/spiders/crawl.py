@@ -3,6 +3,7 @@
 
 import scrapy
 import re
+import sys
 
 class ARTICLEItem(scrapy.Item):
 	date = scrapy.Field()
@@ -12,25 +13,22 @@ class ARTICLEItem(scrapy.Item):
 	year = scrapy.Field()
 
 class PttSpider(scrapy.Spider):
-	name = 'ptt_beauty'
+	name = 'crawl_all_and_pop'
 	allowed_domains = ['ptt.cc']
 
 	start_urls = [
-		'https://www.ptt.cc/bbs/Beauty/index.html'
+		'https://www.ptt.cc/bbs/Beauty/index2000.html'
 	]
 	# clear the file
-	with open('all_articles.txt', 'w'):
-		pass
-	with open('all_popular.txt', 'w'):
-		pass
+	# with open('all_articles.txt', 'w'):
+	# 	pass
+	# with open('all_popular.txt', 'w'):
+	#	pass
 
-
+	pg = 2000
 
 	def parse(self, response):
 		articles = response.xpath('//*[@id="main-container"]/div[2]/div[@class="r-ent"]')
-
-		# if year == 2017
-		stop = 0
 
 		# list for crawled data
 		dates = []
@@ -50,21 +48,34 @@ class PttSpider(scrapy.Spider):
 
 		# crawl all articles
 		#with open('all_articles.txt', 'a') as f_all:
-
-		for i in range(len(titles)):
-			url = 'https://www.ptt.cc'+urls[i]
-			if  titles[i].find('[公告]') == -1 and len(urls[i])!=0:
-				#f_all.write('{0},{1},{2}\n'.format(dates[i],titles[i],'https://www.ptt.cc'+urls[i]))
-				request = scrapy.Request(url,callback=self.get_year,meta={'date':dates[i],'title':titles[i],'url':url,'popular':populars[i]})
-				request.meta['year']=ARTICLEItem(date=dates[i],title=titles[i],url=url,popular=populars[i])
-				yield request
+		if self.pg==2000:
+			p = 13
+			st = len(titles)
+		elif self.pg==2352:
+			p = 0
+			st = 14
+		else:
+			p = 0
+			st = len(titles)
+		self.pg += 1
+		while p < st:
+			url = 'https://www.ptt.cc'+urls[p]
+			if  titles[p].find('Yoonjoo') == -1 and titles[p].find('[公告]') == -1 and len(urls[p])!=0:
+				with open('all_articles.txt', 'a') as f_all:
+					f_all.write('{0},{1},{2}\n'.format(dates[p],titles[p],url))
+				if populars[p] == "爆":
+					with open('all_popular.txt', 'a') as f_pop:
+						f_pop.write('{0},{1},{2}\n'.format(dates[p],titles[p],url))
+				print(dates[p],titles[p])
+			p += 1
 
 		# iterate to next page
-		if len(response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[2]').extract()) > 0:
-			path = response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[2]/@href').extract()
+		if len(response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[3]').extract()) > 0:
+			path = response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[3]/@href').extract()
 			target_url = 'https://www.ptt.cc'
-			ng = target_url + path[0];
-			yield scrapy.Request(ng, callback=self.parse)
+			ng = target_url + path[0]
+			if int(ng[-9:-5])<=2352:
+				yield scrapy.Request(ng, callback=self.parse)
 
 	def date_format(self, dates):
 		new_dates = []
@@ -73,21 +84,18 @@ class PttSpider(scrapy.Spider):
 			date = date.replace(' ','')
 			new_dates.append(date)
 		return new_dates
-
+	'''
 	def get_year(self,response):
 		year = response.meta['year']
 		time = response.xpath('//*[@id="main-content"]/div[4]/span[2]/text()').extract()
 		time = time[0]
 		year['year'] = time[-4:]
-		if time[-4:]=='2017' and int(time[-4:])>=2017:
+		if time[-4:]!='2016' and time[-4:]!='2018':
 			with open('all_articles.txt', 'a') as f_all:
 				f_all.write('{0},{1},{2}\n'.format(response.meta['date'],response.meta['title'],response.meta['url']))
 			if (response.meta['popular']=="爆"):
 				with open('all_popular.txt', 'a') as f_pop:
 					f_pop.write('{0},{1},{2}\n'.format(response.meta['date'],response.meta['title'],response.meta['url']))
-		if int(time[-4:])<2017:
-			print('!',time[-4:],response.meta['date'],response.meta['title'])
-			#raise scrapy.exceptions.CloseSpider("success 2017")
-		else:
-			print(time[-4:],response.meta['date'],response.meta['title'])
+		#print(time[-4:],response.meta['date'],response.meta['title'])
 		yield year
+	'''
