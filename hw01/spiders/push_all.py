@@ -11,8 +11,7 @@ import operator
 class Ptt_Push_ALL_Spider(scrapy.Spider):
 	name = 'push_all'
 	allowed_domains = ['ptt.cc']
-	#start_urls = [ 'https://www.ptt.cc/bbs/Beauty/M.1520761854.A.D67.html'
-	#]
+	start_urls = []
 
 	def parse(self,response):
 		pushs = response.xpath('//*[@id="main-content"]/div[@class="push"]')
@@ -30,7 +29,6 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 				else:
 					self.author_boo[push_tag[1]] += 1
 				self.boo += 1
-		#	print(push_tag)
 
 	def __init__(self, start_date=None, end_date=None, *args, **kwargs):
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
