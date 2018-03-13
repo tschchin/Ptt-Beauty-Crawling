@@ -2,8 +2,8 @@
 
 Use scrapy to crawl https://www.ptt.cc/bbs/Beauty/index.html  for 2017 articles and analysis.
 
-## Getting Started
-###1. Crawl
+### Getting Started
+#### 1. Crawl
 ```
 python3 0310765.py crawl
 ```
@@ -16,7 +16,7 @@ python3 0310765.py crawl
 	* all_popular.txt (all popular articles)
  * file format:
  	* [date],[title],[URL]
-###2. Push
+#### 2. Push
 ```
 python3 0310765.py push start_date end_date
 ```
@@ -36,7 +36,7 @@ python3 0310765.py push start_date end_date
 	  all boo: n
 	  like #rank: [user_id] [number of like]  (rand 1-10)
 	  boo #rank: [user_id] [number of boo] (rand 1-10)
-###3. Popular
+#### 3. Popular
 ```
 python3 0310765.py popular start_date end_date
 ```
@@ -53,7 +53,7 @@ python3 0310765.py popular start_date end_date
  * File Format:
  	* number of popular articles: n
 	* each line with one url
-###4. Keyword
+#### 4. Keyword
 ```
 python3 0310765.py keyword [keyword] start_date end_date
 ```
