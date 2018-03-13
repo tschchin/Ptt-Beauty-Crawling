@@ -4,28 +4,25 @@
 import scrapy
 import re
 import sys
+from scrapy import signals
+from scrapy.xlib.pydispatch import dispatcher
 
-class ARTICLEItem(scrapy.Item):
-	date = scrapy.Field()
-	title = scrapy.Field()
-	url = scrapy.Field()
-	popular = scrapy.Field()
-	year = scrapy.Field()
-
-class PttSpider(scrapy.Spider):
+class Ptt_Crawl_Spider(scrapy.Spider):
 	name = 'crawl_all_and_pop'
 	allowed_domains = ['ptt.cc']
-
 	start_urls = [
 		'https://www.ptt.cc/bbs/Beauty/index2000.html'
+	]#'https://www.ptt.cc/bbs/Beauty/index2000.html']
+	exclude_pgs = [
+		'https://www.ptt.cc/bbs/Beauty/M.1490936972.A.60D.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1494776135.A.50A.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1503194519.A.F4C.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1504936945.A.313.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1505973115.A.732.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1507620395.A.27E.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1510829546.A.D83.html',
+		'https://www.ptt.cc/bbs/Beauty/M.1512141143.A.D31.html'
 	]
-	# clear the file
-	# with open('all_articles.txt', 'w'):
-	# 	pass
-	# with open('all_popular.txt', 'w'):
-	#	pass
-
-	pg = 2000
 
 	def parse(self, response):
 		articles = response.xpath('//*[@id="main-container"]/div[2]/div[@class="r-ent"]')
@@ -47,35 +44,21 @@ class PttSpider(scrapy.Spider):
 		dates = self.date_format(dates)
 
 		# crawl all articles
-		#with open('all_articles.txt', 'a') as f_all:
-		if self.pg==2000:
-			p = 13
-			st = len(titles)
-		elif self.pg==2352:
-			p = 0
-			st = 14
-		else:
-			p = 0
-			st = len(titles)
-		self.pg += 1
-		while p < st:
-			url = 'https://www.ptt.cc'+urls[p]
-			if  titles[p].find('Yoonjoo') == -1 and titles[p].find('[公告]') == -1 and len(urls[p])!=0:
-				with open('all_articles.txt', 'a') as f_all:
-					f_all.write('{0},{1},{2}\n'.format(dates[p],titles[p],url))
-				if populars[p] == "爆":
-					with open('all_popular.txt', 'a') as f_pop:
-						f_pop.write('{0},{1},{2}\n'.format(dates[p],titles[p],url))
-				print(dates[p],titles[p])
-			p += 1
-
-		# iterate to next page
-		if len(response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[3]').extract()) > 0:
-			path = response.xpath('//*[@id="action-bar-container"]/div/div[2]/a[3]/@href').extract()
-			target_url = 'https://www.ptt.cc'
-			ng = target_url + path[0]
-			if int(ng[-9:-5])<=2352:
-				yield scrapy.Request(ng, callback=self.parse)
+		for p in range(len(titles)):
+			url = 'https://www.ptt.cc' + urls[p]
+			if not url in self.exclude_pgs:
+				if int(response.request.url[-9:-5]) == 2000 and int(dates[p])>200:
+					pass
+				elif int(response.request.url[-9:-5]) == 2352 and int(dates[p])<1200:
+					pass
+				elif titles[p][:4] != '[公告]' and len(urls[p])!=0:
+					self.dates.append(dates[p])
+					self.titles.append(titles[p])
+					self.urls.append(url)
+					self.populars.append(populars[p])
+		if self.np <= 2351:
+			self.np += 1
+			yield scrapy.Request('https://www.ptt.cc/bbs/Beauty/index'+str(self.np)+'.html')
 
 	def date_format(self, dates):
 		new_dates = []
@@ -84,18 +67,26 @@ class PttSpider(scrapy.Spider):
 			date = date.replace(' ','')
 			new_dates.append(date)
 		return new_dates
-	'''
-	def get_year(self,response):
-		year = response.meta['year']
-		time = response.xpath('//*[@id="main-content"]/div[4]/span[2]/text()').extract()
-		time = time[0]
-		year['year'] = time[-4:]
-		if time[-4:]!='2016' and time[-4:]!='2018':
-			with open('all_articles.txt', 'a') as f_all:
-				f_all.write('{0},{1},{2}\n'.format(response.meta['date'],response.meta['title'],response.meta['url']))
-			if (response.meta['popular']=="爆"):
-				with open('all_popular.txt', 'a') as f_pop:
-					f_pop.write('{0},{1},{2}\n'.format(response.meta['date'],response.meta['title'],response.meta['url']))
-		#print(time[-4:],response.meta['date'],response.meta['title'])
-		yield year
-	'''
+
+	def __init__(self, *args, **kwargs):
+		dispatcher.connect(self.spider_closed, signals.spider_closed)
+		super(Ptt_Crawl_Spider, self).__init__(*args, **kwargs)
+		with open('all_articles.txt', 'w'):
+		 	pass
+		with open('all_popular.txt', 'w'):
+			pass
+		self.dates = []
+		self.titles = []
+		self.urls = []
+		self.populars = []
+		self.np = 2000
+
+	def spider_closed(self, spider):
+		f_all =  open('all_articles.txt', 'a')
+		f_pop = open('all_popular.txt', 'a')
+		for p in range(len(self.titles)):
+			f_all.write('{0},{1},{2}\n'.format(self.dates[p],self.titles[p],self.urls[p]))
+			if self.populars[p] == "爆":
+				f_pop.write('{0},{1},{2}\n'.format(self.dates[p],self.titles[p],self.urls[p]))
+		f_all.close()
+		f_pop.close()

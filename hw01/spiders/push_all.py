@@ -11,7 +11,7 @@ import operator
 class Ptt_Push_ALL_Spider(scrapy.Spider):
 	name = 'push_all'
 	allowed_domains = ['ptt.cc']
-	start_urls = []
+	start_urls = []#'https://www.ptt.cc/bbs/Beauty/M.1485964889.A.E9D.html']#'https://www.ptt.cc/bbs/Beauty/index2000.html']
 
 	def parse(self,response):
 		pushs = response.xpath('//*[@id="main-content"]/div[@class="push"]')
@@ -29,6 +29,14 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 				else:
 					self.author_boo[push_tag[1]] += 1
 				self.boo += 1
+		'''
+		if self.i < self.l:
+			self.i += 1
+			yield scrapy.Request(self.np[self.i],self.parse)
+		'''
+
+
+
 
 	def __init__(self, start_date=None, end_date=None, *args, **kwargs):
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
@@ -39,14 +47,23 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 		self.author_boo = {}
 		self.start_date = start_date
 		self.end_date = end_date
+		self.i = 0
+		self.np = []
 		with open('all_articles.txt','r') as f:
 			line = f.readline()
 			while len(line)>0:
 				date = int(line.split(',',2)[0])
 				url = line.split(',',2)[2][:-1]
+				if line.split(',',2)[2][:9].find('https'):
+					url = line.split(',',3)[3][:-1]
+					print(url)
 				if int(start_date)<=date and int(end_date)>=date:
 					self.start_urls.append(url)
+					#self.np.append(url)
 				line = f.readline()
+		#self.start_urls.append(self.np[self.i])
+		#self.l = len(self.np)
+		#print(len(self.np))
 
 	def spider_closed(self, spider):
 		with open('push['+self.start_date+'-'+self.end_date+'].txt','w') as f:
@@ -68,7 +85,7 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 				lb= 10
 			for i in range(ll):
 				# print("like #"+str(i+1)+": "+sorted_like[i] + " " + str(self.author_like[sorted_like[i]]))
-				f.write("like #{0}: {1}  {2}\n".format(str(i+1),sorted_like[i],str(self.author_like[sorted_like[i]])))
+				f.write("like #{0}: {1} {2}\n".format(str(i+1),sorted_like[i],str(self.author_like[sorted_like[i]])))
 			for i in range(lb):
-				f.write("boo #{0}: {1}  {2}\n".format(str(i+1),sorted_boo[i],str(self.author_boo[sorted_boo[i]])))
+				f.write("boo #{0}: {1} {2}\n".format(str(i+1),sorted_boo[i],str(self.author_boo[sorted_boo[i]])))
 				# print("boo #"+str(i+1)+": "+sorted_boo[i] + " " + str(self.author_boo[sorted_boo[i]]))

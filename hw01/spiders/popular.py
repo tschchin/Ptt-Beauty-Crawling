@@ -8,11 +8,14 @@ class Ptt_Popular_Spider(scrapy.Spider):
 	start_urls = []
 	pic_format = ['jpg','jpeg','png','gif']
 	def parse(self,response):
-		contents = response.xpath('//*[@id="main-content"]/a')
-		for content in contents:
-			url = content.xpath('text()').extract()[0]
-			if any( p_f in url[-6:] for p_f in self.pic_format):
-				self.url.append(url)
+		content = response.xpath('//*[@id="main-container"]')
+		contents = content.xpath('descendant::*/a')
+		for c in contents:
+			if len(c.xpath('text()').extract())>0:
+				url = c.xpath('text()').extract()[0]
+				#print(url)
+				if any( p_f in url[-6:] for p_f in self.pic_format):
+					self.url.append(url)
 
 	def __init__(self, start_date=None, end_date=None, *args, **kwargs):
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
@@ -30,6 +33,7 @@ class Ptt_Popular_Spider(scrapy.Spider):
 					self.start_urls.append(url)
 					self.popular += 1
 				line = f.readline()
+
 	def spider_closed(self, spider):
 		with open('popular['+self.start_date+'-'+self.end_date+'].txt','w') as f:
 			pass
