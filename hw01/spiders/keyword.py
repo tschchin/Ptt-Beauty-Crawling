@@ -26,7 +26,7 @@ class Ptt_Keyword_Spider(scrapy.Spider):
 					for c in contents:
 						if len(c.xpath('text()').extract())>0: # ignore []
 							url = c.xpath('text()').extract()[0]
-							if any( p_f in url[-6:] for p_f in self.pic_format):
+							if any( p_f in url[-6:].lower() for p_f in self.pic_format):
 								self.url.append(url)
 					break
 		if self.i < len(self.np)-1:

@@ -14,7 +14,7 @@ class Ptt_Popular_Spider(scrapy.Spider):
 			if len(c.xpath('text()').extract())>0:
 				url = c.xpath('text()').extract()[0]
 				#print(url)
-				if any( p_f in url[-6:] for p_f in self.pic_format):
+				if any( p_f in url[-6:].lower() for p_f in self.pic_format):
 					self.url.append(url)
 
 	def __init__(self, start_date=None, end_date=None, *args, **kwargs):
