@@ -29,14 +29,6 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 				else:
 					self.author_boo[push_tag[1]] += 1
 				self.boo += 1
-		'''
-		if self.i < self.l:
-			self.i += 1
-			yield scrapy.Request(self.np[self.i],self.parse)
-		'''
-
-
-
 
 	def __init__(self, start_date=None, end_date=None, *args, **kwargs):
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
@@ -50,20 +42,10 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 		self.i = 0
 		self.np = []
 		with open('all_articles.txt','r') as f:
-			line = f.readline()
-			while len(line)>0:
-				date = int(line.split(',',2)[0])
-				url = line.split(',',2)[2][:-1]
-				if line.split(',',2)[2][:9].find('https'):
-					url = line.split(',',3)[3][:-1]
-					print(url)
-				if int(start_date)<=date and int(end_date)>=date:
-					self.start_urls.append(url)
-					#self.np.append(url)
-				line = f.readline()
-		#self.start_urls.append(self.np[self.i])
-		#self.l = len(self.np)
-		#print(len(self.np))
+			for line in f:
+				date, *_, url = line.split(',')
+				if int(start_date)<=int(date) and int(end_date)>=int(date):
+					self.start_urls.append(url[:-1])
 
 	def spider_closed(self, spider):
 		with open('push['+self.start_date+'-'+self.end_date+'].txt','w') as f:
@@ -71,8 +53,6 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 		with open('push['+self.start_date+'-'+self.end_date+'].txt','a') as f:
 			f.write('all like: {0}\n'.format(str(self.like)))
 			f.write('all boo: {0}\n'.format(str(self.boo)))
-			# print('all like: '+str(self.like))
-			# print('all boo: '+str(self.boo))
 			sorted_like = sorted(self.author_like, key=lambda key: (-self.author_like[key],key))
 			sorted_boo = sorted(self.author_boo, key=lambda key: (-self.author_boo[key],key))
 			if len(sorted_like)<10:
@@ -84,8 +64,6 @@ class Ptt_Push_ALL_Spider(scrapy.Spider):
 			else:
 				lb= 10
 			for i in range(ll):
-				# print("like #"+str(i+1)+": "+sorted_like[i] + " " + str(self.author_like[sorted_like[i]]))
 				f.write("like #{0}: {1} {2}\n".format(str(i+1),sorted_like[i],str(self.author_like[sorted_like[i]])))
 			for i in range(lb):
 				f.write("boo #{0}: {1} {2}\n".format(str(i+1),sorted_boo[i],str(self.author_boo[sorted_boo[i]])))
-				# print("boo #"+str(i+1)+": "+sorted_boo[i] + " " + str(self.author_boo[sorted_boo[i]]))
