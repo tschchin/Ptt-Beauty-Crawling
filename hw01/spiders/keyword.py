@@ -27,35 +27,32 @@ class Ptt_Keyword_Spider(scrapy.Spider):
 						if len(c.xpath('text()').extract())>0: # ignore []
 							url = c.xpath('text()').extract()[0]
 							if any( p_f in url[-6:].lower() for p_f in self.pic_format):
-								self.url.append(url)
+								self.popular.append(url)
 					break
-		if self.i < len(self.np)-1:
+		if self.i < len(self.url)-1:
 			self.i += 1
-			yield scrapy.Request(self.np[self.i],self.parse)
+			print(self.i)
+			yield scrapy.Request(self.url[self.i],self.parse)
 
 	def __init__(self, keyword=None,start_date=None, end_date=None, *args, **kwargs):
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
 		super(Ptt_Keyword_Spider, self).__init__(*args, **kwargs)
 		self.keyword = keyword
-		self.url = []
+		self.url = [] # the page to crawl
+		self.popular = [] # the resault
 		self.start_date = start_date
 		self.end_date = end_date
-		self.np = []
 		self.i = 0
 		with open('all_articles.txt','r') as f:
-			line = f.readline()
-			while len(line)>0:
-				date = int(line.split(',',2)[0])
-				url = line.split(',',2)[2][:-1]
-				if int(start_date)<=date and int(end_date)>=date:
-					#self.start_urls.append(url)
-					self.np.append(url)
-				line = f.readline()
-			self.start_urls.append(self.np[self.i])
+			for line in f:
+				date,*_,url = line.split(',')
+				if int(start_date)<=int(date) and int(end_date)>=int(date):
+					self.url.append(url[:-1])
+			self.start_urls.append(self.url[0])
 
 	def spider_closed(self, spider):
 		with open('keyword('+self.keyword+')'+'['+self.start_date+'-'+self.end_date+'].txt','w') as f:
 			pass
 		with open('keyword('+self.keyword+')'+'['+self.start_date+'-'+self.end_date+'].txt','a') as f:
-			for i in self.url:
+			for i in self.popular:
 				f.write(i+'\n')
